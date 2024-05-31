@@ -19,7 +19,7 @@ Android: Use [Termux](https://termux.dev/en/) on Android.
 
 With python installed, setup gropchat via pip:
 
-> pip install gropchat
+> pip install groqchat
 
 # Get Started
 
