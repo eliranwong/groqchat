@@ -5,6 +5,16 @@ Modified groq chatbot developed in https://github.com/eliranwong/freegenius
 
 A chatbot that is simple and runnable on mobile phones as well as pc.
 
+# Groq API Key
+
+Get a Groq API key first. Read https://github.com/eliranwong/freegenius/wiki/Set-up-a-Groq-Cloud-API-Key
+
+# Android / iOS / iPhone / iPad Users
+
+iOS/iPad/iPhone: Use [iSH](https://ish.app/) on iOS/iPad/iPhone.
+
+Android: Use [Termux](https://termux.dev/en/) on Android.
+
 # Installation
 
 With python installed, setup gropchat via pip:
