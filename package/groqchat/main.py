@@ -12,7 +12,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.shortcuts import clear
 from pathlib import Path
-import threading, argparse, os, traceback
+import threading, argparse, os, traceback, platform
 
 
 class GroqChatbot:
@@ -149,14 +149,15 @@ class GroqChatbot:
         print2("```system message")
         print1(config.systemMessage_groq)
         print2("```")
-        if hasattr(config, "currentMessages"):
-            bottom_toolbar = f""" {str(config.hotkey_exit).replace("'", "")} {config.exit_entry}"""
-        else:
-            bottom_toolbar = f""" {str(config.hotkey_exit).replace("'", "")} {config.exit_entry} {str(config.hotkey_new).replace("'", "")} .new"""
-            print("(To start a new chart, enter '.new')")
+        #if hasattr(config, "currentMessages"):
+        #    bottom_toolbar = f""" {str(config.hotkey_exit).replace("'", "")} {config.exit_entry}"""
+        #else:
+        #    bottom_toolbar = f""" {str(config.hotkey_exit).replace("'", "")} {config.exit_entry} {str(config.hotkey_new).replace("'", "")} .new"""
+        #    print("(To start a new chart, enter '.new')")
+        bottom_toolbar = f""" {str(config.hotkey_exit).replace("'", "")} {config.exit_entry}"""
         print(f"(To exit, enter '{config.exit_entry}')\n")
         while True:
-            completer = None if hasattr(config, "currentMessages") else FuzzyCompleter(WordCompleter([".new", ".api", ".model", ".systemmessage", ".temperature", ".maxtokens", config.exit_entry], ignore_case=True))
+            completer = None if hasattr(config, "currentMessages") else FuzzyCompleter(WordCompleter([".new", ".api", ".model", ".systemmessage", ".temperature", ".maxtokens", ".togglewordwrap", ".togglevoiceoutput", config.exit_entry], ignore_case=True))
             if not prompt:
                 prompt = SinglePrompt.run(style=self.promptStyle, promptSession=chat_session, bottom_toolbar=bottom_toolbar, completer=completer)
                 userMessage = {"role": "user", "content": prompt}
@@ -169,6 +170,10 @@ class GroqChatbot:
                 self.messages.append(userMessage)
             if prompt == config.exit_entry:
                 break
+            elif not hasattr(config, "currentMessages") and prompt.lower() == ".togglevoiceoutput":
+                config.ttsOutput = not config.ttsOutput
+            elif not hasattr(config, "currentMessages") and prompt.lower() == ".togglewordwrap":
+                config.wrapWords = not config.wrapWords
             elif not hasattr(config, "currentMessages") and prompt.lower() == ".temperature":
                 self.setTemperature()
             elif not hasattr(config, "currentMessages") and prompt.lower() == ".maxtokens":

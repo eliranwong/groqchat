@@ -1,4 +1,5 @@
 from groqchat import config, getStringWidth, wrapText
+from groqchat.utils.tts_utils import TTSUtil
 #import pygments
 #from pygments.lexers.markup import MarkdownLexer
 #from prompt_toolkit.formatted_text import PygmentsTokens
@@ -160,10 +161,23 @@ class StreamingWordWrapper:
                 finishOutputs(wrapWords, chat_response)
                 return None
         
+        if config.ttsOutput and config.tempChunk:
+            # read the final chunk
+            TTSUtil.play(config.tempChunk)
         config.tempChunk = ""
         finishOutputs(wrapWords, chat_response)
 
     def readAnswer(self, answer):
         # read the chunk when there is a punctuation
         #if answer in string.punctuation and config.tempChunk:
-        config.tempChunk += answer
+        if re.search(config.tts_startReadPattern, answer) and config.tempChunk:
+            # read words when there a punctuation
+            chunk = config.tempChunk + answer
+            # play with tts
+            if config.ttsOutput:
+                TTSUtil.play(re.sub(config.tts_doNotReadPattern, "", chunk))
+            # reset config.tempChunk
+            config.tempChunk = ""
+        else:
+            # append to a chunk for reading
+            config.tempChunk += answer
