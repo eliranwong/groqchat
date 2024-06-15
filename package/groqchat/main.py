@@ -1,5 +1,5 @@
 from groqchat import config
-from groqchat import print1, print2, print3, getGroqClient, saveConfig
+from groqchat import print1, print2, print3, getGroqClient, saveConfig, voiceTyping, checkPyaudio
 from groqchat.utils.streaming_word_wrapper import StreamingWordWrapper
 from groqchat.utils.terminal_mode_dialogs import TerminalModeDialogs
 from groqchat.utils.single_prompt import SinglePrompt
@@ -11,8 +11,9 @@ from prompt_toolkit.styles import Style
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.shortcuts import clear
-from pathlib import Path
-import threading, argparse, os, traceback, platform
+from prompt_toolkit.application import run_in_terminal
+import threading, argparse, os, traceback
+from prompt_toolkit.key_binding import KeyBindings
 
 
 class GroqChatbot:
@@ -42,7 +43,23 @@ class GroqChatbot:
         if not config.groqApi_key:
             self.changeGroqApi()
             self.setLlmModel_groq()
+        # initial check
+        checkPyaudio()
 
+    def getKeyBindings(self):
+        this_key_bindings = KeyBindings()
+
+        @this_key_bindings.add(*config.hotkey_voice_entry)
+        def _(event):
+            if config.pyaudioInstalled:
+                buffer = event.app.current_buffer
+                buffer.text = f"{buffer.text}{' ' if buffer.text else ''}{voiceTyping()}"
+                if config.voiceTypingAutoComplete:
+                    buffer.validate_and_handle()
+                else:
+                    buffer.cursor_position = buffer.cursor_position + buffer.document.get_end_of_line_position()
+            else:
+                run_in_terminal(lambda: print2("Install PyAudio first to enable voice recognition!"))
 
     def resetMessages(self):
         return [{"role": "system", "content": config.systemMessage_groq},]
@@ -123,7 +140,6 @@ class GroqChatbot:
         #completer = FuzzyCompleter(WordCompleter(list(config.predefinedContexts.values()), ignore_case=True))
         # history
         historyFolder = os.path.join(config.localStorage, "gchat")
-        Path(historyFolder).mkdir(parents=True, exist_ok=True)
         system_message_history = os.path.join(historyFolder, "system_message")
         system_message_session = PromptSession(history=FileHistory(system_message_history))
         # prompt
@@ -141,7 +157,6 @@ class GroqChatbot:
         if self.defaultPrompt:
             prompt, self.defaultPrompt = self.defaultPrompt, ""
         historyFolder = os.path.join(config.localStorage, "gchat")
-        Path(historyFolder).mkdir(parents=True, exist_ok=True)
         chat_history = os.path.join(historyFolder, "groq")
         chat_session = PromptSession(history=FileHistory(chat_history))
 
@@ -172,8 +187,10 @@ class GroqChatbot:
                 break
             elif not hasattr(config, "currentMessages") and prompt.lower() == ".togglevoiceoutput":
                 config.ttsOutput = not config.ttsOutput
+                print3(f"TTS Output: {config.ttsOutput}")
             elif not hasattr(config, "currentMessages") and prompt.lower() == ".togglewordwrap":
                 config.wrapWords = not config.wrapWords
+                print3(f"Word Wrap: {config.wrapWords}")
             elif not hasattr(config, "currentMessages") and prompt.lower() == ".temperature":
                 self.setTemperature()
             elif not hasattr(config, "currentMessages") and prompt.lower() == ".maxtokens":

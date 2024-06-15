@@ -39,3 +39,5 @@ say_voice = ""
 say_speed = "200"
 vlcSpeed = 1.0
 piper_voice = "en_US-lessac-medium"
+hotkey_voice_entry = ["c-s"]
+voiceTypingAutoComplete = False

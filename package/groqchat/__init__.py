@@ -1,8 +1,10 @@
 from groqchat import config
 from groq import Groq
 from prompt_toolkit import print_formatted_text, HTML
-
+from pathlib import Path
 import pprint, os, shutil, textwrap, wcwidth, requests, sys, subprocess, re, platform
+import speech_recognition as sr
+import sounddevice, soundfile
 
 thisFile = os.path.realpath(__file__)
 config.packageFolder = os.path.dirname(thisFile)
@@ -11,6 +13,113 @@ config.localStorage = os.path.expanduser("~")
 config.isPipUpdated = False
 thisPlatform = platform.system()
 config.thisPlatform = "macOS" if thisPlatform == "Darwin" else thisPlatform
+
+userFolder = os.path.join(config.localStorage, "gchat")
+Path(userFolder).mkdir(parents=True, exist_ok=True)
+userFolder = os.path.join(config.localStorage, "gchat", "LLMs", "piper")
+Path(userFolder).mkdir(parents=True, exist_ok=True)
+
+def checkPyaudio():
+    try:
+        import sounddevice
+        import speech_recognition as sr
+        mic = sr.Microphone() 
+        del mic
+        config.pyaudioInstalled = True
+    except:
+        if config.isTermux:
+            config.pyaudioInstalled = False
+            #print2("Installing 'portaudio' and 'Pyaudio' ...")
+            #os.system("pkg install portaudio")
+            #config.pyaudioInstalled = True if installPipPackage("--upgrade PyAudio") else False
+        elif isCommandInstalled("brew"):
+            print2("Installing 'portaudio' and 'Pyaudio' ...")
+            os.system("brew install portaudio")
+            config.pyaudioInstalled = True if installPipPackage("--upgrade PyAudio") else False
+        elif isCommandInstalled("apt"):
+            print2("Installing 'portaudio19-dev' and 'Pyaudio' ...")
+            os.system("sudo apt update && sudo apt install portaudio19-dev")
+            config.pyaudioInstalled = True if installPipPackage("--upgrade PyAudio") else False
+        elif isCommandInstalled("dnf"):
+            print2("Installing 'portaudio-devel' and 'Pyaudio' ...")
+            os.system("sudo dnf update && sudo dnf install portaudio-devel")
+            config.pyaudioInstalled = True if installPipPackage("--upgrade PyAudio") else False
+        else:
+            config.pyaudioInstalled = False
+
+    if not config.pyaudioInstalled:
+        print3("Note: 'pyAudio' is not installed.")
+        print1("It is essential for built-in voice recognition feature.")
+
+def playAudio(audioFile):
+    sounddevice.play(*soundfile.read(audioFile)) 
+    sounddevice.wait()
+
+def voiceTyping():
+    # reference: https://github.com/Uberi/speech_recognition/blob/master/examples/microphone_recognition.py
+    # import sounddevice to solve alsa error display: https://github.com/Uberi/speech_recognition/issues/182#issuecomment-1426939447
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        if config.voiceTypingNotification:
+            playAudio(os.path.join(config.freeGeniusAIFolder, "audio", "notification1_mild.mp3"))
+        #run_in_terminal(lambda: print2("Listensing to your voice ..."))
+        if config.voiceTypingAdjustAmbientNoise:
+            r.adjust_for_ambient_noise(source)
+        audio = r.listen(source)
+    if config.voiceTypingNotification:
+        playAudio(os.path.join(config.freeGeniusAIFolder, "audio", "notification2_mild.mp3"))
+    #run_in_terminal(lambda: print2("Processing to your voice ..."))
+    if config.voiceTypingPlatform == "google":
+        # recognize speech using Google Speech Recognition
+        try:
+            # check google.recognize_legacy in SpeechRecognition package
+            # check available languages at: https://cloud.google.com/speech-to-text/docs/speech-to-text-supported-languages
+            # config.voiceTypingLanguage should be code list in column BCP-47 at https://cloud.google.com/speech-to-text/docs/speech-to-text-supported-languages
+            return r.recognize_google(audio, language=config.voiceTypingLanguage)
+        except sr.UnknownValueError:
+            #return "[Speech unrecognized!]"
+            return ""
+        except sr.RequestError as e:
+            return "[Error: {0}]".format(e)
+    elif config.voiceTypingPlatform == "googlecloud" and os.environ["GOOGLE_APPLICATION_CREDENTIALS"] and "Speech-to-Text" in config.enabledGoogleAPIs:
+        # recognize speech using Google Cloud Speech
+        try:
+            # check availabl languages at: https://cloud.google.com/speech-to-text/docs/speech-to-text-supported-languages
+            # config.voiceTypingLanguage should be code list in column BCP-47 at https://cloud.google.com/speech-to-text/docs/speech-to-text-supported-languages
+            return r.recognize_google_cloud(audio, language=config.voiceTypingLanguage, credentials_json=config.google_cloud_credentials)
+        except sr.UnknownValueError:
+            #return "[Speech unrecognized!]"
+            return ""
+        except sr.RequestError as e:
+            return "[Error: {0}]".format(e)
+    elif config.voiceTypingPlatform == "whisper":
+        # recognize speech using whisper
+        try:
+            # check availabl languages at: https://github.com/openai/whisper/blob/main/whisper/tokenizer.py
+            # config.voiceTypingLanguage should be uncapitalized full language name like "english" or "chinese"
+            return r.recognize_whisper(audio, model=config.voiceTypingWhisperEnglishModel if config.voiceTypingLanguage == "english" else "large", language=config.voiceTypingLanguage)
+        except sr.UnknownValueError:
+            return ""
+        except sr.RequestError as e:
+            return "[Error]"
+    elif config.voiceTypingPlatform == "whispercpp":
+        #from speech_recognition.audio import AudioData
+        #assert isinstance(audio, AudioData), "Data must be audio data"
+        wav_bytes_data = audio.get_wav_data(
+            convert_rate=16000,  # audio samples must be 8kHz or 16 kHz
+            convert_width=2  # audio samples should be 16-bit
+        )
+        wav_file = os.path.join(config.freeGeniusAIFolder, "temp", "voice.wav")
+        with open(wav_file, "wb") as fileObj:
+            fileObj.write(wav_bytes_data)
+        # Example of cli: ./main -np -nt -l auto -t 12 -m ggml-large-v3-q5_0.bin -f ~/Desktop/voice.wav
+        # *.bin model files available at: https://huggingface.co/ggerganov/whisper.cpp/tree/main
+        if not os.path.isfile(config.whispercpp_main) or not os.path.isfile(config.whispercpp_model):
+            return "[Error]"
+        cli = f'''"{config.whispercpp_main}" -np -nt -l {'en' if config.voiceTypingLanguage.lower() in ('english', 'en') else 'auto'} -t {getCpuThreads()} -m "{config.whispercpp_model}" -f "{wav_file}" {config.whispercpp_additional_options}'''
+        process = subprocess.Popen(cli.rstrip(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        return "[Error]" if stderr and not stdout else stdout.decode("utf-8").strip()
 
 def getStringWidth(text):
     width = 0
@@ -112,6 +221,7 @@ def saveConfig():
         'ttsPlatform', 
         'isPipUpdated',
         'thisPlatform',
+        'pyaudioInstalled',
     ]
     excludeConfigList = []
     configFile = os.path.join(config.packageFolder, "config.py")
