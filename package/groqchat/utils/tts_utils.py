@@ -8,7 +8,14 @@ class TTSUtil:
     def play(content):
         if config.tts and content.strip():
             try:
-                if config.thisPlatform == "macOS":
+                if shutil.which("termux-tts-speak"):
+                    # Use termux-tts-speak via termux API on Android
+                    # read https://wiki.termux.com/wiki/Termux-tts-speak
+                    additional_options = f" {config.termuxtts_additional_options.strip()}" if config.termuxtts_additional_options.strip() else ""
+                    voice = f" -l {config.termuxtts_voice.strip()}" if config.termuxtts_voice.strip() else ""
+                    cmd = f"termux-tts-speak -r {config.vlcSpeed}{voice}{additional_options}"
+                    pydoc.pipepager(content, cmd=cmd)
+                elif config.thisPlatform == "macOS":
                     additional_options = f" {config.say_additional_options.strip()}" if config.say_additional_options.strip() else ""
                     voice = f" -v {config.say_voice.strip()}" if config.say_voice.strip() else ""
                     cmd = f"say -r {config.say_speed}{voice}{additional_options}"
