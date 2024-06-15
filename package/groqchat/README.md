@@ -1,9 +1,10 @@
 # groqchat
+
 A terminal chatbot, powered by Groq Cloud API (Windows / macOS / Linux / Android / iOS)
 
 Modified groq chatbot developed in https://github.com/eliranwong/freegenius
 
-A chatbot that is simple and runnable on mobile phones as well as pc.
+A simple chatbot that runs fast on mobile phones as well as pc.
 
 # Groq API Key
 
@@ -36,9 +37,9 @@ Select a model:
 
 <img width="1004" alt="models" src="https://github.com/eliranwong/groqchat/assets/25262722/42cbcd85-b13a-4188-98e6-2abf99542993">
 
-# Special Entry
+# Special Entries
 
-Enter a dot '.' to display available special entry:
+Enter a dot '.' to display available special entries:
 
 <img width="1004" alt="ui" src="https://github.com/eliranwong/groqchat/assets/25262722/31fa20e7-24cb-4aa1-b67e-38f6bf24971d">
 
@@ -54,7 +55,35 @@ Enter a dot '.' to display available special entry:
 
 '.maxtokens' - change max tokens
 
+'.togglewordwrap' - toggle word wrap
+
+'.togglevoiceoutput' - toggle voice output
+
 '.exit' - exit the application
+
+# Keyboard Shortcuts
+
+By default:
+
+Ctrl+Z - cancel
+
+Ctrl+Q - exit / quit
+
+Ctrl+I / TAB - insert new line
+
+Ctrl+N - new chat session
+
+Ctrl+W - toggle word wrap
+
+Ctrl+Y - toggle voice output
+
+Ctrl+S - trigger voice entry
+
+# Configurations
+
+Advanced users may change configurations manually by editing the file "config.py" located in the package folder.
+
+Remarks: Close the app before editing the file.
 
 # CLI Options
 

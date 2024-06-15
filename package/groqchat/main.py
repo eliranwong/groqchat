@@ -1,5 +1,5 @@
 from groqchat import config
-from groqchat import print1, print2, print3, getGroqClient, saveConfig, voiceTyping, checkPyaudio
+from groqchat import print1, print2, print3, getGroqClient, saveConfig, checkPyaudio
 from groqchat.utils.streaming_word_wrapper import StreamingWordWrapper
 from groqchat.utils.terminal_mode_dialogs import TerminalModeDialogs
 from groqchat.utils.single_prompt import SinglePrompt
@@ -45,21 +45,6 @@ class GroqChatbot:
             self.setLlmModel_groq()
         # initial check
         checkPyaudio()
-
-    def getKeyBindings(self):
-        this_key_bindings = KeyBindings()
-
-        @this_key_bindings.add(*config.hotkey_voice_entry)
-        def _(event):
-            if config.pyaudioInstalled:
-                buffer = event.app.current_buffer
-                buffer.text = f"{buffer.text}{' ' if buffer.text else ''}{voiceTyping()}"
-                if config.voiceTypingAutoComplete:
-                    buffer.validate_and_handle()
-                else:
-                    buffer.cursor_position = buffer.cursor_position + buffer.document.get_end_of_line_position()
-            else:
-                run_in_terminal(lambda: print2("Install PyAudio first to enable voice recognition!"))
 
     def resetMessages(self):
         return [{"role": "system", "content": config.systemMessage_groq},]
@@ -187,9 +172,11 @@ class GroqChatbot:
                 break
             elif not hasattr(config, "currentMessages") and prompt.lower() == ".togglevoiceoutput":
                 config.ttsOutput = not config.ttsOutput
+                saveConfig()
                 print3(f"TTS Output: {config.ttsOutput}")
             elif not hasattr(config, "currentMessages") and prompt.lower() == ".togglewordwrap":
                 config.wrapWords = not config.wrapWords
+                saveConfig()
                 print3(f"Word Wrap: {config.wrapWords}")
             elif not hasattr(config, "currentMessages") and prompt.lower() == ".temperature":
                 self.setTemperature()

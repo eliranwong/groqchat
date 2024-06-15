@@ -1,6 +1,6 @@
 import textwrap
 from groqchat import config
-from groqchat import print3, saveConfig
+from groqchat import print2, print3, saveConfig, voiceTyping
 
 from prompt_toolkit import prompt
 from prompt_toolkit.filters import Condition
@@ -31,12 +31,29 @@ class SinglePrompt:
             config.wrapWords = not config.wrapWords
             saveConfig()
             run_in_terminal(lambda: print3(f"Word Wrap: '{'enabled' if config.wrapWords else 'disabled'}'!"))
+        @this_key_bindings.add(*config.hotkey_toggle_response_audio)
+        def _(_):
+            if config.tts:
+                config.ttsOutput = not config.ttsOutput
+                saveConfig()
+                run_in_terminal(lambda: print3(f"Response Audio: '{'enabled' if config.ttsOutput else 'disabled'}'!"))
         @this_key_bindings.add(*config.hotkey_new)
         def _(event):
             buffer = event.app.current_buffer
             config.defaultEntry = buffer.text
             buffer.text = ".new"
             buffer.validate_and_handle()
+        @this_key_bindings.add(*config.hotkey_voice_entry)
+        def _(event):
+            if config.pyaudioInstalled:
+                buffer = event.app.current_buffer
+                buffer.text = f"{buffer.text}{' ' if buffer.text else ''}{voiceTyping()}"
+                if config.voiceTypingAutoComplete:
+                    buffer.validate_and_handle()
+                else:
+                    buffer.cursor_position = buffer.cursor_position + buffer.document.get_end_of_line_position()
+            else:
+                run_in_terminal(lambda: print2("Install PyAudio first to enable voice entry!"))
 
         config.selectAll = False
         inputPrompt = promptSession.prompt if promptSession is not None else prompt

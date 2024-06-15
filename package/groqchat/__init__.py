@@ -2,17 +2,21 @@ from groqchat import config
 from groq import Groq
 from prompt_toolkit import print_formatted_text, HTML
 from pathlib import Path
-import pprint, os, shutil, textwrap, wcwidth, requests, sys, subprocess, re, platform
+import pprint, os, shutil, textwrap, wcwidth, requests, sys, subprocess, re, platform, psutil
 import speech_recognition as sr
 import sounddevice, soundfile
 
 thisFile = os.path.realpath(__file__)
 config.packageFolder = os.path.dirname(thisFile)
+if config.developer:
+    print(f"Package located at: {config.packageFolder}")
 config.localStorage = os.path.expanduser("~")
 
 config.isPipUpdated = False
 thisPlatform = platform.system()
 config.thisPlatform = "macOS" if thisPlatform == "Darwin" else thisPlatform
+
+config.isTermux = True if os.path.isdir("/data/data/com.termux/files/home") else False
 
 userFolder = os.path.join(config.localStorage, "gchat")
 Path(userFolder).mkdir(parents=True, exist_ok=True)
@@ -61,13 +65,13 @@ def voiceTyping():
     r = sr.Recognizer()
     with sr.Microphone() as source:
         if config.voiceTypingNotification:
-            playAudio(os.path.join(config.freeGeniusAIFolder, "audio", "notification1_mild.mp3"))
+            playAudio(os.path.join(config.packageFolder, "audio", "notification1_mild.mp3"))
         #run_in_terminal(lambda: print2("Listensing to your voice ..."))
         if config.voiceTypingAdjustAmbientNoise:
             r.adjust_for_ambient_noise(source)
         audio = r.listen(source)
     if config.voiceTypingNotification:
-        playAudio(os.path.join(config.freeGeniusAIFolder, "audio", "notification2_mild.mp3"))
+        playAudio(os.path.join(config.packageFolder, "audio", "notification2_mild.mp3"))
     #run_in_terminal(lambda: print2("Processing to your voice ..."))
     if config.voiceTypingPlatform == "google":
         # recognize speech using Google Speech Recognition
@@ -109,7 +113,7 @@ def voiceTyping():
             convert_rate=16000,  # audio samples must be 8kHz or 16 kHz
             convert_width=2  # audio samples should be 16-bit
         )
-        wav_file = os.path.join(config.freeGeniusAIFolder, "temp", "voice.wav")
+        wav_file = os.path.join(config.packageFolder, "temp", "voice.wav")
         with open(wav_file, "wb") as fileObj:
             fileObj.write(wav_bytes_data)
         # Example of cli: ./main -np -nt -l auto -t 12 -m ggml-large-v3-q5_0.bin -f ~/Desktop/voice.wav
@@ -120,6 +124,12 @@ def voiceTyping():
         process = subprocess.Popen(cli.rstrip(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         return "[Error]" if stderr and not stdout else stdout.decode("utf-8").strip()
+
+def getCpuThreads():
+    if config.cpu_threads and isinstance(config.cpu_threads, int):
+        return config.cpu_threads
+    physical_cpu_core = psutil.cpu_count(logical=False)
+    return physical_cpu_core if physical_cpu_core and physical_cpu_core > 1 else 1
 
 def getStringWidth(text):
     width = 0
