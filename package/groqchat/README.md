@@ -22,6 +22,10 @@ With python installed, setup gropchat via pip:
 
 > pip install groqchat
 
+Or
+
+> pip install gchat
+
 # Get Started
 
 Simply run 'gchat':
@@ -77,7 +81,13 @@ Ctrl+W - toggle word wrap
 
 Ctrl+Y - toggle voice output
 
-Ctrl+S - trigger voice entry
+Ctrl+S - trigger voice typing
+
+# Android Users
+
+On Android, use Android built-in voice typing keyboards of Ctrl+S.
+
+Install [Termux:API](https://wiki.termux.com/wiki/Termux:API), to work with response output on Andoird.
 
 # Configurations
 

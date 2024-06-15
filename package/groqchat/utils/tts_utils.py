@@ -33,7 +33,7 @@ class TTSUtil:
                     additional_options = f" {config.wsay_additional_options.strip()}" if config.wsay_additional_options.strip() else ""
                     cmd = f'''"{homeWsay if os.path.isfile(homeWsay) else 'wsay'}" --voice {config.wsay_voice} --speed {config.wsay_speed}{additional_options}'''
                     pydoc.pipepager(content, cmd=cmd)
-                elif config.thisPlatform == "Linux":
+                elif config.thisPlatform == "Linux" and not config.isTermux:
                     if not shutil.which("piper"):
                         install = installPipPackage("piper-tts")
                         if not install:

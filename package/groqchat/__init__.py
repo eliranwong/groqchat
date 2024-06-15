@@ -51,7 +51,7 @@ def checkPyaudio():
         else:
             config.pyaudioInstalled = False
 
-    if not config.pyaudioInstalled:
+    if not config.pyaudioInstalled and not config.isTermux:
         print3("Note: 'pyAudio' is not installed.")
         print1("It is essential for built-in voice recognition feature.")
 
