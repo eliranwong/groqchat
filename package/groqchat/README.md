@@ -26,6 +26,24 @@ Or
 
 > pip install gchat
 
+# Android Users
+
+1. Install rust
+
+> pkg install rust
+
+2. Use "--system-site-packages" if you create a virtual environment, e.g.
+
+> python -m venv gchat --system-site-packages
+
+> source gchat/bin/activate
+
+> pip install --upgrade gchat
+
+On Android, use Android built-in voice typing keyboards of Ctrl+S.
+
+Install [Termux:API](https://wiki.termux.com/wiki/Termux:API), to work with response output on Andoird.
+
 # Get Started
 
 Simply run 'gchat':
@@ -83,12 +101,6 @@ Ctrl+Y - toggle voice output
 
 Ctrl+S - trigger voice typing
 
-# Android Users
-
-On Android, use Android built-in voice typing keyboards of Ctrl+S.
-
-Install [Termux:API](https://wiki.termux.com/wiki/Termux:API), to work with response output on Andoird.
-
 # Configurations
 
 Advanced users may change configurations manually by editing the file "config.py" located in the package folder.
@@ -110,3 +122,47 @@ For example, to start with a greeting:
 For example, to set temperature to 0.8 and maximum output tokens to 1024, run:
 
 > gchat -t 0.8 -o 1024 "Hi!"
+
+# Install Multiple Copies
+
+You may want to install multiple copies to customise them with different system messages or other settings.  
+
+An easy way to achieve it is to use alias, e.g.:
+
+> mkdir apps
+
+> cd apps
+
+> python3 -m venv assist explain quote illustrate summarize
+
+> source assist/bin/activate
+
+> pip install gchat
+
+> source explain/bin/activate
+
+> pip install gchat
+
+> source quote/bin/activate
+
+> pip install gchat
+
+> source illustrate/bin/activate
+
+> pip install gchat
+
+> source summarize/bin/activate
+
+> pip install gchat
+
+> nano .bashrc
+
+Add the following aliases:
+
+```
+alias explain=$HOME/apps/explain/bin/gchat
+alias illustrate=$HOME/apps/illustrate/bin/gchat
+alias quote=$HOME/apps/quote/bin/gchat
+alias assist=$HOME/apps/assist/bin/gchat
+alias summarize=$HOME/apps/summarize/bin/gchat
+```
