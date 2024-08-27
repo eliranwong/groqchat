@@ -22,7 +22,7 @@ with open(os.path.join(package, "requirements.txt"), "r") as fileObj:
 # https://packaging.python.org/en/latest/guides/distributing-packages-using-setuptools/
 setup(
     name=package,
-    version="0.0.16",
+    version="0.0.17",
     python_requires=">=3.8",
     description="A terminal chatbot, powered by Groq Cloud API (Windows / macOS / Linux / Android / iOS)",
     long_description=long_description,
