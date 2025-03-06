@@ -4,4 +4,5 @@ soundfile==0.12.1
 sounddevice==0.4.7
 SpeechRecognition
 psutil
+requests
 numpy==1.26.4
